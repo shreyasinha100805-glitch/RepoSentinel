@@ -1,0 +1,26 @@
+steps:
+  # Build Backend Container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/reposentinel-backend:$COMMIT_SHA', './backend']
+
+  # Push Backend Image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/reposentinel-backend:$COMMIT_SHA']
+
+  # Deploy Backend to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'reposentinel-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/reposentinel-backend:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/$PROJECT_ID/reposentinel-backend:$COMMIT_SHA'
