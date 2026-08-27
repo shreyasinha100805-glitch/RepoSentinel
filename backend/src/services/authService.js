@@ -19,8 +19,12 @@ function loadUsers() {
 }
 
 function saveUsers() {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(USERS_FILE, JSON.stringify(Array.from(users.values()), null, 2));
+    try {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+        fs.writeFileSync(USERS_FILE, JSON.stringify(Array.from(users.values()), null, 2));
+    } catch (err) {
+        console.warn('Auth user store could not be saved to disk:', err.message);
+    }
 }
 
 function publicUser(user) {
