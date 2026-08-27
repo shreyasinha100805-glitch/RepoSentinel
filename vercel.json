@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "services": {
+    "frontend": {
+      "root": "frontend",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist"
+    },
+    "backend": {
+      "root": "backend",
+      "buildCommand": "npm install",
+      "routes": [
+        {
+          "src": "/api/(.*)",
+          "dest": "/api/$1"
+        }
+      ]
+    }
+  }
+}
