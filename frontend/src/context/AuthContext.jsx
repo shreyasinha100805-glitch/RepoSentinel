@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { login, logout, register } from '../services/api';
+import { login, loginWithGithub, logout, register } from '../services/api';
 import { readStoredSession, writeStoredSession } from '../services/authStorage';
 
 const AuthContext = createContext(null);
@@ -18,6 +18,11 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(session?.token),
     async loginUser(credentials) {
       const nextSession = await login(credentials);
+      saveSession(nextSession);
+      return nextSession;
+    },
+    async loginWithGithubUser(details) {
+      const nextSession = await loginWithGithub(details);
       saveSession(nextSession);
       return nextSession;
     },

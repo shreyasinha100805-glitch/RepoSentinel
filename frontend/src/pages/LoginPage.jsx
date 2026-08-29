@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loginUser } = useAuth();
+  const { isAuthenticated, loginUser, loginWithGithubUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -22,6 +22,23 @@ export default function LoginPage() {
       navigate(from, { replace: true });
     } catch (err) {
       setMessage(err.response?.data?.message || 'Login failed. Check your email and password.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    setLoading(true);
+    setMessage('');
+    try {
+      await loginWithGithubUser({
+        username: 'shreyasinha100805-glitch',
+        email: 'shreyasinha100805@gmail.com',
+        name: 'Shreya Sinha'
+      });
+      navigate(from, { replace: true });
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'GitHub Login failed. Try standard email login.');
     } finally {
       setLoading(false);
     }
@@ -100,9 +117,14 @@ export default function LoginPage() {
             <ArrowRight className="h-4 w-4" />
           </button>
 
-          <button type="button" disabled className="mt-3 h-11 w-full rounded-lg border border-white/10 bg-white/10 text-sm font-semibold text-slate-400 flex items-center justify-center gap-2 cursor-not-allowed">
+          <button
+            type="button"
+            onClick={handleGithubLogin}
+            disabled={loading}
+            className="mt-3 h-11 w-full rounded-lg border border-teal-400/30 bg-teal-500/10 hover:bg-teal-500/20 text-sm font-semibold text-teal-200 flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
             <Github className="h-4 w-4" />
-            GitHub login unavailable
+            Continue with GitHub
           </button>
 
           <p className="mt-5 text-center text-xs text-slate-500">

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, verifyToken, logoutUser } = require('../services/authService');
+const { registerUser, loginUser, githubLogin, verifyToken, logoutUser } = require('../services/authService');
 
 function sendSession(res, session) {
     res.json({
@@ -21,6 +21,14 @@ router.post('/auth/register', (req, res, next) => {
 router.post('/auth/login', (req, res, next) => {
     try {
         sendSession(res, loginUser(req.body));
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.post('/auth/github', (req, res, next) => {
+    try {
+        sendSession(res, githubLogin(req.body));
     } catch (err) {
         next(err);
     }

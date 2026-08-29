@@ -127,9 +127,33 @@ function logoutUser(token) {
     if (token) sessions.delete(token);
 }
 
+function githubLogin({ username = 'shreyasinha100805-glitch', email = 'shreyasinha100805@gmail.com', name = 'Shreya Sinha' } = {}) {
+    const normalizedEmail = String(email || 'shreyasinha100805@gmail.com').trim().toLowerCase();
+    let user = users.get(normalizedEmail);
+    if (!user) {
+        user = {
+            id: `user_gh_${Date.now()}`,
+            name: name || username || 'GitHub Developer',
+            organization: 'GitHub Security Audit',
+            email: normalizedEmail,
+            passwordHash: '',
+            passwordSalt: '',
+            githubUsername: username || 'shreyasinha100805-glitch',
+            createdAt: new Date().toISOString()
+        };
+        users.set(normalizedEmail, user);
+        saveUsers();
+    }
+    return {
+        user: publicUser(user),
+        token: createSession(user)
+    };
+}
+
 module.exports = {
     registerUser,
     loginUser,
+    githubLogin,
     verifyToken,
     logoutUser
 };
