@@ -1,18 +1,46 @@
 const express = require('express');
 const router = express.Router();
+const { REGISTERED_GOOGLE_AI_MODELS, processQueryWithGoogleModel } = require('../services/googleAiModelsService');
+const { validateAgentEnvironment } = require('../services/googleAgentFramework');
 
 function compactFinding(finding) {
     return `${finding.severity || 'INFO'} ${finding.type || finding.category || 'finding'} in ${finding.file || 'unknown file'}${finding.line ? `:${finding.line}` : ''}`;
 }
 
-router.post('/assistant', (req, res) => {
+router.get('/models', (req, res) => {
+    res.json({
+        framework: validateAgentEnvironment(),
+        models: REGISTERED_GOOGLE_AI_MODELS
+    });
+});
+
+router.post('/assistant', async (req, res) => {
     const { question = '', selectedModel = 'gemini-3.5-flash' } = req.body;
     const scan = req.body.scan || {};
     const findings = Array.isArray(scan.findings) ? scan.findings : [];
     const counts = scan.severityCounts || {};
     const topFindings = findings.slice(0, 3).map(compactFinding);
-    const lowered = String(question).toLowerCase();
 
+    // Call Multi-Model Processor for special models (Veo, Lyria, Gemma 2 9B)
+    if (['veo-visualizer', 'lyria-audio-brief', 'gemma-2-9b-it'].includes(selectedModel)) {
+        const multiModelRes = await processQueryWithGoogleModel(question, selectedModel, {
+            repo: scan.repository || 'demo-repository',
+            findingsCount: findings.length,
+            score: scan.securityScore || 42
+        });
+        return res.json({
+            model: selectedModel,
+            answer: multiModelRes.text || multiModelRes.audioScript || multiModelRes.textSummary || JSON.stringify(multiModelRes.analysis),
+            multiModelResult: multiModelRes,
+            suggestions: [
+                'Switch back to Gemini 3.5 Flash',
+                'Explain the security architecture',
+                'Generate Lyria executive briefing'
+            ]
+        });
+    }
+
+    const lowered = String(question).toLowerCase();
     let answer = 'I can help you triage findings, explain risk, and decide what to fix next.';
 
     if (lowered.includes('fix') || lowered.includes('remed')) {
