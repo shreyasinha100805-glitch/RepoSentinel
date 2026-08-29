@@ -80,6 +80,22 @@ export default function DashboardPage({ selectedModel = 'gemini-3.5-flash' }) {
       });
       if (res && res.pullRequest) {
         setPrResult(res.pullRequest);
+        setScan((prev) => {
+          if (!prev) return prev;
+          const updatedFindings = (prev.findings || []).map((item) => ({
+            ...item,
+            status: 'Remediated'
+          }));
+          return {
+            ...prev,
+            findings: updatedFindings,
+            securityScore: 100,
+            verification: {
+              ...prev.verification,
+              afterScore: 100
+            }
+          };
+        });
       }
     } catch (err) {
       console.error('Error creating PR:', err);
@@ -202,6 +218,47 @@ export default function DashboardPage({ selectedModel = 'gemini-3.5-flash' }) {
         findings={scan?.findings || []}
         onSelectFinding={(f) => setSelectedFinding(f)}
         selectedFindingId={selectedFinding?.id}
+        onToggleStatus={(finding) => {
+          setScan((prev) => {
+            if (!prev) return prev;
+            const updatedFindings = (prev.findings || []).map((item) => {
+              if (item.id === finding.id) {
+                const isCurrentlyFixed = ['Fixed', 'Remediated', 'Resolved', 'Approved', 'PR Created'].includes(item.status);
+                return { ...item, status: isCurrentlyFixed ? 'Open' : 'Remediated' };
+              }
+              return item;
+            });
+            const openCount = updatedFindings.filter(f => !['Fixed', 'Remediated', 'Resolved', 'Approved', 'PR Created'].includes(f.status)).length;
+            const newScore = openCount === 0 ? 100 : Math.max(30, 100 - openCount * 10);
+            return {
+              ...prev,
+              findings: updatedFindings,
+              securityScore: newScore,
+              verification: {
+                ...prev.verification,
+                afterScore: newScore
+              }
+            };
+          });
+        }}
+        onFixAll={() => {
+          setScan((prev) => {
+            if (!prev) return prev;
+            const updatedFindings = (prev.findings || []).map((item) => ({
+              ...item,
+              status: 'Remediated'
+            }));
+            return {
+              ...prev,
+              findings: updatedFindings,
+              securityScore: 100,
+              verification: {
+                ...prev.verification,
+                afterScore: 100
+              }
+            };
+          });
+        }}
       />
 
       {/* Remediation Panel */}
